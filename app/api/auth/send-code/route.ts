@@ -87,27 +87,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email
-      })
-    }).catch(error => {
-      console.error('Erro ao enviar para webhook (não crítico):', error);
-    });
-
-    return NextResponse.json({ 
-      message: 'Código enviado para seu email',
-      success: true 
-    });
-
-  } catch (error) {
-    console.error('Erro ao processar solicitação:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
