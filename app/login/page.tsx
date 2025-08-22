@@ -37,7 +37,7 @@ export default function LoginPage() {
     setTimeout(() => {
       setIsLoading(false);
       // Aqui redirecionaria para o dashboard
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     }, 1500);
   };
 
