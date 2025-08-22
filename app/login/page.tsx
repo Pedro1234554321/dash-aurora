@@ -19,12 +19,30 @@ export default function LoginPage() {
 
     setIsLoading(true);
     
-    // Simular envio do código
-    setTimeout(() => {
+    try {
+      const response = await fetch('https://finance-n8n.yyn81m.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email
+        })
+      });
+
+      if (response.ok) {
+        setCodeSent(true);
+        setStep('code');
+      } else {
+        console.error('Erro ao enviar código:', response.statusText);
+        // Aqui você pode adicionar uma notificação de erro para o usuário
+      }
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      // Aqui você pode adicionar uma notificação de erro para o usuário
+    } finally {
       setIsLoading(false);
-      setCodeSent(true);
-      setStep('code');
-    }, 2000);
+    }
   };
 
   const handleCodeSubmit = async (e: React.FormEvent) => {
@@ -43,10 +61,29 @@ export default function LoginPage() {
 
   const handleResendCode = () => {
     setIsLoading(true);
-    setTimeout(() => {
+    
+    fetch('https://finance-n8n.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email
+      })
+    })
+    .then(response => {
+      if (response.ok) {
+        setCodeSent(true);
+      } else {
+        console.error('Erro ao reenviar código:', response.statusText);
+      }
+    })
+    .catch(error => {
+      console.error('Erro na requisição:', error);
+    })
+    .finally(() => {
       setIsLoading(false);
-      setCodeSent(true);
-    }, 1000);
+    });
   };
 
   return (
