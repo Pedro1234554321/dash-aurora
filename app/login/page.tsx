@@ -20,7 +20,7 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://finance-n8n.yyn81m.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
+      const response = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ export default function LoginPage() {
         setCodeSent(true);
         setStep('code');
       } else {
-        console.error('Erro ao enviar código:', response.statusText);
+        alert('Erro ao enviar código. Tente novamente.');
         // Aqui você pode adicionar uma notificação de erro para o usuário
       }
     } catch (error) {
@@ -51,18 +51,36 @@ export default function LoginPage() {
 
     setIsLoading(true);
     
-    // Simular verificação do código
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          code: code
+        })
+      });
+
+      if (response.ok) {
+        window.location.href = '/dashboard';
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Código inválido. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro na verificação:', error);
+      alert('Erro ao verificar código. Tente novamente.');
+    } finally {
       setIsLoading(false);
-      // Aqui redirecionaria para o dashboard
-      window.location.href = '/dashboard';
-    }, 1500);
+    }
   };
 
   const handleResendCode = () => {
     setIsLoading(true);
     
-    fetch('https://finance-n8n.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
+    fetch('/api/auth/send-code', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,7 +93,7 @@ export default function LoginPage() {
       if (response.ok) {
         setCodeSent(true);
       } else {
-        console.error('Erro ao reenviar código:', response.statusText);
+        alert('Erro ao reenviar código. Tente novamente.');
       }
     })
     .catch(error => {
