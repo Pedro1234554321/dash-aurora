@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,34 +11,27 @@ export async function POST(request: NextRequest) {
 
     // Gerar código de 6 dígitos
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedCode = await bcrypt.hash(code, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+    const expireAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
 
-    // Verificar se usuário existe, se não, criar
+    // Verificar se usuário existe
     const userCheck = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
+      'SELECT id FROM usuarios WHERE email = $1',
       [email]
     );
 
-    let userId;
     if (userCheck.rows.length === 0) {
-      // Criar novo usuário
-      const newUser = await pool.query(
-        'INSERT INTO users (email, created_at) VALUES ($1, NOW()) RETURNING id',
-        [email]
-      );
-      userId = newUser.rows[0].id;
-    } else {
-      userId = userCheck.rows[0].id;
+      return NextResponse.json({ 
+        error: 'Usuário não encontrado. Entre em contato com o administrador.' 
+      }, { status: 404 });
     }
+
+    const userId = userCheck.rows[0].id;
 
     // Salvar código no banco
     await pool.query(
-      `INSERT INTO verification_codes (user_id, code, expires_at, created_at) 
-       VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (user_id) 
-       DO UPDATE SET code = $2, expires_at = $3, created_at = NOW()`,
-      [userId, hashedCode, expiresAt]
+      `INSERT INTO tb_login_code (id_usuario, code, expire_at, used) 
+       VALUES ($1, $2, $3, FALSE)`,
+      [userId, code, expireAt]
     );
 
     // Enviar para o webhook externo
@@ -50,7 +42,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         email: email,
-        code: code // Enviar código não hasheado para o webhook
+        code: code
       })
     });
 
