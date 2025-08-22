@@ -59,7 +59,34 @@ export async function POST(request: NextRequest) {
     }
 
     // Enviar email para o webhook externo (sem código)
-    fetch('https://finance-n8n.yyn81m.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
+    try {
+      fetch('https://finance-n8n.yyn81m.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email
+        })
+      });
+      console.log('POST enviado para webhook:', email);
+    } catch (error) {
+      console.error('Erro ao enviar POST para webhook:', error);
+    }
+
+    return NextResponse.json({ 
+      message: 'Código enviado para seu email',
+      success: true 
+    });
+
+  } catch (error) {
+    console.error('Erro ao processar solicitação:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
