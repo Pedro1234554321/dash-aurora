@@ -34,12 +34,12 @@ export default function LoginPage() {
         setCodeSent(true);
         setStep('code');
       } else {
-        alert('Erro ao enviar código. Tente novamente.');
-        // Aqui você pode adicionar uma notificação de erro para o usuário
+        const errorData = await response.json();
+        alert(errorData.error || 'Erro ao enviar código. Tente novamente.');
       }
     } catch (error) {
       console.error('Erro na requisição:', error);
-      // Aqui você pode adicionar uma notificação de erro para o usuário
+      alert('Erro de conexão. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
