@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Enviar email para o webhook externo (sem código)
     try {
+      // Dispara webhook sem esperar resposta
       fetch('https://finance-n8n.yyn81m.easypanel.host/webhook/397f9cd0-eaad-4caf-8302-2f63c6e21859', {
         method: 'POST',
         headers: {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           email: email
         })
-      });
+      }).catch(error => console.log('Webhook error (não crítico):', error));
       console.log('POST enviado para webhook:', email);
     } catch (error) {
       console.error('Erro ao enviar POST para webhook:', error);
