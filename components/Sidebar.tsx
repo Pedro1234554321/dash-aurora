@@ -38,9 +38,11 @@ export default function Sidebar({ collapsed }: SidebarProps) {
     )}>
       <div className="p-4">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-[#00E980] to-[#00FFBB] rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">A</span>
-          </div>
+          <img 
+            src="https://public-images-b573dd662d7c89a635d85c00405f50b1.s3.us-east-1.amazonaws.com/logos/IMG_6066.PNG"
+            alt="Aurora Logo"
+            className="w-8 h-8 object-contain rounded-lg bg-white p-1"
+          />
           {!collapsed && (
             <div>
               <h2 className="text-xl font-bold text-[#015061]">AURORA</h2>

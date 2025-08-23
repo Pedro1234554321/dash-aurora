@@ -118,9 +118,11 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#00E980] to-[#00FFBB] rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-2xl">A</span>
-              </div>
+              <img 
+                src="https://public-images-b573dd662d7c89a635d85c00405f50b1.s3.us-east-1.amazonaws.com/logos/IMG_6066.PNG"
+                alt="Aurora Logo"
+                className="w-16 h-16 object-contain shadow-lg rounded-2xl bg-white p-2"
+              />
               <div className="absolute -inset-1 bg-gradient-to-br from-[#00E980] to-[#00FFBB] rounded-2xl blur opacity-25"></div>
             </div>
           </div>

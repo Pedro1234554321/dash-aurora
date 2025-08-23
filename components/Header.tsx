@@ -45,8 +45,8 @@ export default function Header({ onToggleSidebar, collapsed }: HeaderProps) {
               <p className="text-sm font-medium text-gray-900">João Silva</p>
               <p className="text-xs text-gray-500">Analista Financeiro</p>
             </div>
-            <div className="w-8 h-8 bg-gradient-to-br from-[#00E980] to-[#00FFBB] rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-gray-600" />
             </div>
           </div>
         </div>
