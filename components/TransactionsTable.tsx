@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, MoreHorizontal, ArrowUpDown, Search, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,61 +13,35 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+import { DashboardDataType } from '../app/dashboard/types';
+
 interface TransactionsTableProps {
-  filters: any;
+  dashboardData: DashboardDataType;
 }
 
-const mockTransactions = [
-  {
-    id: '001',
-    date: '2024-01-15',
-    description: 'Venda de Software - Cliente ABC',
-    category: 'Receita',
-    type: 'Entrada',
-    amount: 45000,
-    status: 'Confirmado'
-  },
-  {
-    id: '002',
-    date: '2024-01-14',
-    description: 'Pagamento Fornecedor XYZ',
-    category: 'Operacional',
-    type: 'Saída',
-    amount: -12500,
-    status: 'Processado'
-  },
-  {
-    id: '003',
-    date: '2024-01-13',
-    description: 'Investimento em Marketing Digital',
-    category: 'Marketing',
-    type: 'Saída',
-    amount: -8500,
-    status: 'Pendente'
-  },
-  {
-    id: '004',
-    date: '2024-01-12',
-    description: 'Consultoria Financeira',
-    category: 'Receita',
-    type: 'Entrada',
-    amount: 25000,
-    status: 'Confirmado'
-  },
-  {
-    id: '005',
-    date: '2024-01-11',
-    description: 'Salários Equipe',
-    category: 'Pessoal',
-    type: 'Saída',
-    amount: -95000,
-    status: 'Processado'
-  }
-];
+// Tipo para as transações
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  category: string;
+  type: string;
+  amount: number;
+  status?: string; // Tornando o status opcional
+}
 
-export default function TransactionsTable({ filters }: TransactionsTableProps) {
+export default function TransactionsTable({ dashboardData }: TransactionsTableProps) {
   const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [paginationData, setPaginationData] = useState({
+    totalRecords: 0,
+    totalPages: 0,
+    limit: 20
+  });
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -84,29 +59,193 @@ export default function TransactionsTable({ filters }: TransactionsTableProps) {
     }).format(Math.abs(value));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmado':
+  const getStatusColor = (status?: string) => {
+    if (!status) return 'bg-gray-100 text-gray-800';
+    
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'confirmado':
         return 'bg-green-100 text-green-800';
-      case 'Processado':
+      case 'processed':
+      case 'processado':
         return 'bg-blue-100 text-blue-800';
-      case 'Pendente':
+      case 'pending':
+      case 'pendente':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  // Traduz os status para português
+  const translateStatus = (status?: string) => {
+    if (!status) return 'Desconhecido';
+    
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'Confirmado';
+      case 'pending':
+        return 'Pendente';
+      case 'processed':
+        return 'Processado';
+      default:
+        return status;
+    }
+  };
+  
+  // Traduz os tipos de transação para português
+  const translateType = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'income':
+        return 'Entrada';
+      case 'expense':
+        return 'Saída';
+      default:
+        return type;
+    }
+  };
+  
+  // Função para carregar transações com paginação e filtros
+  const loadTransactions = async (page: number) => {
+    try {
+      setIsLoading(true);
+      
+      // Construir URL com parâmetros de filtro
+      let url = `/api/dashboard/transactions?page=${page}&limit=${paginationData.limit}`;
+      
+      // Adicionar filtro de busca se existir
+      if (searchText.trim()) {
+        url += `&search=${encodeURIComponent(searchText.trim())}`;
+      }
+      
+      // Adicionar filtro de data se existir
+      if (dateFilter) {
+        url += `&date=${encodeURIComponent(dateFilter)}`;
+      }
+      
+      console.log('Buscando transações com URL:', url);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar transações');
+      }
+      
+      const data = await response.json();
+      
+      if (data.pagination) {
+        setPaginationData({
+          totalRecords: data.pagination.totalRecords,
+          totalPages: data.pagination.totalPages,
+          limit: data.pagination.limit
+        });
+      }
+      
+      // Atualizar o estado do dashboard com as novas transações
+      dashboardData.transactions = data.data;
+      setCurrentPage(page);
+    } catch (error) {
+      console.error('Erro ao carregar transações:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Funções para navegação de páginas
+  const goToNextPage = () => {
+    if (currentPage < paginationData.totalPages) {
+      loadTransactions(currentPage + 1);
+    }
+  };
+  
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      loadTransactions(currentPage - 1);
+    }
+  };
+  
+  // Handler para atualizar o filtro de busca
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  // Handler para atualizar o filtro de data
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFilter(e.target.value);
+  };
+
+  // Handler para aplicar os filtros
+  const applyFilters = () => {
+    loadTransactions(1); // Reinicia a paginação ao aplicar filtros
+  };
+
+  // Handler para limpar os filtros
+  const clearFilters = () => {
+    setSearchText('');
+    setDateFilter('');
+    loadTransactions(1);
+  };
+
+  // Inicializar paginação quando os dados do dashboard forem carregados
+  useEffect(() => {
+    if (dashboardData.transactions && dashboardData.transactions.length > 0) {
+      // Inicializa os dados de paginação com base nos dados iniciais recebidos
+      if (dashboardData.pagination) {
+        setPaginationData({
+          totalRecords: dashboardData.pagination.totalRecords,
+          totalPages: dashboardData.pagination.totalPages,
+          limit: dashboardData.pagination.limit
+        });
+      }
+    }
+  }, [dashboardData]);
 
   return (
     <Card className="border-0 shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-gray-900">Transações Recentes</CardTitle>
-          <Button variant="outline" size="sm">
-            Ver todas
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => loadTransactions(1)}
+            disabled={isLoading}
+          >
+            {isLoading ? "Carregando..." : "Recarregar"}
           </Button>
         </div>
       </CardHeader>
+      
+      {/* Filtros de pesquisa e data */}
+      <div className="px-5 pb-2 pt-0">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Buscar por descrição..."
+              className="pl-10"
+              value={searchText}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <div className="relative sm:w-48">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="date"
+              className="pl-10"
+              value={dateFilter}
+              onChange={handleDateChange}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="default" size="sm" onClick={applyFilters}>
+              Filtrar
+            </Button>
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              Limpar
+            </Button>
+          </div>
+        </div>
+      </div>
       
       <CardContent className="p-0">
         <div className="overflow-x-auto">
@@ -143,7 +282,9 @@ export default function TransactionsTable({ filters }: TransactionsTableProps) {
               </tr>
             </thead>
             <tbody>
-              {mockTransactions.map((transaction, index) => (
+              {dashboardData.transactions && dashboardData.transactions.length > 0 ? (
+                // Limita para exibir apenas as 5 transações mais recentes
+                dashboardData.transactions.slice(0, 5).map((transaction: Transaction, index: number) => (
                 <tr key={transaction.id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="p-4 text-sm text-gray-900">
                     {new Date(transaction.date).toLocaleDateString('pt-BR')}
@@ -156,9 +297,9 @@ export default function TransactionsTable({ filters }: TransactionsTableProps) {
                   <td className="p-4">
                     <Badge 
                       variant="secondary" 
-                      className={transaction.type === 'Entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                      className={transaction.type.toLowerCase() === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
                     >
-                      {transaction.type}
+                      {translateType(transaction.type)}
                     </Badge>
                   </td>
                   <td className="p-4">
@@ -168,7 +309,7 @@ export default function TransactionsTable({ filters }: TransactionsTableProps) {
                   </td>
                   <td className="p-4">
                     <Badge className={getStatusColor(transaction.status)}>
-                      {transaction.status}
+                      {translateStatus(transaction.status)}
                     </Badge>
                   </td>
                   <td className="p-4 text-center">
@@ -187,10 +328,50 @@ export default function TransactionsTable({ filters }: TransactionsTableProps) {
                     </DropdownMenu>
                   </td>
                 </tr>
-              ))}
+              ))) : (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center text-gray-500">
+                    Nenhuma transação disponível. Os dados serão exibidos quando estiverem disponíveis no banco de dados.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+        
+        {/* Controles de paginação */}
+        {dashboardData.transactions && dashboardData.transactions.length > 0 && (
+          <div className="flex justify-between items-center mt-4 px-4 pb-2">
+            <div className="text-sm text-gray-500">
+              {isLoading ? (
+                "Carregando..."
+              ) : (
+                `Mostrando ${Math.min(paginationData.limit, dashboardData.transactions.length)} de ${paginationData.totalRecords} transações`
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPage <= 1 || isLoading}
+              >
+                Anterior
+              </Button>
+              <span className="flex items-center justify-center px-3 py-1 text-sm bg-gray-100 rounded">
+                {currentPage} / {Math.max(1, paginationData.totalPages)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage >= paginationData.totalPages || isLoading}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

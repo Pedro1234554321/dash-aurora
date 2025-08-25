@@ -52,22 +52,88 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
+      // Garantir que o JSON enviado seja válido
+      const requestData = {
+        email: email,
+        code: code
+      };
+      
       const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: email,
-          code: code
-        })
+        body: JSON.stringify(requestData)
       });
 
       if (response.ok) {
-        window.location.href = '/dashboard';
+        // Armazenar informações mínimas no localStorage
+        localStorage.setItem('user_email', email);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('authTimestamp', Date.now().toString());
+        
+        try {
+          // Para respostas de sucesso, pegar os dados
+          const responseText = await response.text();
+          console.log('Resposta da API de login:', responseText);
+          
+          try {
+            const data = JSON.parse(responseText);
+            if (data && data.user) {
+              localStorage.setItem('userId', data.user.id);
+            }
+            
+            // Salvando o token diretamente no localStorage como solução alternativa
+            if (data && data.token) {
+              localStorage.setItem('auth-token', data.token);
+              console.log('Token JWT salvo no localStorage');
+            }
+          } catch (e) {
+            console.warn('Erro ao parsear resposta de sucesso:', e);
+          }
+        } catch (e) {
+          console.warn('Erro ao ler resposta de sucesso:', e);
+        }
+        
+        // Salvando todas as informações importantes no localStorage
+        localStorage.setItem('user_email', email);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('authTimestamp', Date.now().toString());
+        localStorage.setItem('lastLogin', new Date().toISOString());
+        
+        // Show success message before redirecting
+        alert('Login realizado com sucesso! Redirecionando para o dashboard...');
+        
+        // SOLUÇÃO EXTREMA: Sobrescrever a URL ao invés de redirecionar
+        window.history.pushState({}, '', '/dashboard');
+        window.location.assign('/dashboard');
+        
+        // Como backup adicional, tentar várias formas de redirecionamento
+        setTimeout(() => {
+          console.log('Tentativa adicional de redirecionamento...');
+          window.location.href = '/dashboard';
+          
+          // Última tentativa após 1 segundo
+          setTimeout(() => {
+            console.log('Tentativa final de redirecionamento...');
+            document.location.replace('/dashboard');
+          }, 1000);
+        }, 500);
       } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Código inválido. Tente novamente.');
+        // Para respostas de erro, precisamos ler o corpo
+        const errorText = await response.text();
+        let errorMessage = 'Código inválido ou expirado. Tente novamente.';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          console.error('Erro ao analisar resposta de erro:', e);
+        }
+        
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Erro na verificação:', error);

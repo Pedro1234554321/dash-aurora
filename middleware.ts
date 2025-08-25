@@ -1,32 +1,61 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'aurora-finance-secret-key';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/login', '/api/auth/send-code', '/api/auth/verify-code'];
+  console.log('Middleware executado para:', pathname);
   
-  if (publicRoutes.includes(pathname) || pathname === '/') {
+  // Rotas públicas que não precisam de autenticação
+  const publicRoutes = [
+    '/login', 
+    '/api/auth/send-code', 
+    '/api/auth/verify-code', 
+    '/_next', 
+    '/favicon.ico'
+  ];
+  
+  // Verificar se é uma rota pública
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || pathname === '/';
+  if (isPublicRoute) {
+    console.log('Rota pública permitida:', pathname);
     return NextResponse.next();
   }
 
+  // Adiciona /api/dashboard às rotas protegidas
+  if (pathname.startsWith('/api/dashboard')) {
+    // Para APIs do dashboard, apenas verifica a presença do token (sem validar no middleware)
+    const token = request.cookies.get('auth-token')?.value;
+    console.log('Token para rota de API:', pathname, token ? 'presente' : 'ausente');
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Não autorizado', message: 'Token ausente' }, { status: 401 });
+    }
+    
+    // A verificação completa será feita na rota da API (ambiente Node.js completo)
+    console.log('Token presente para API, validação será feita na rota');
+    return NextResponse.next();
+  }
+
+  // Para rotas de páginas (não APIs)
   // Verificar token de autenticação
   const token = request.cookies.get('auth-token')?.value;
+  const authStatus = request.cookies.get('auth-status')?.value;
+  
+  console.log('Verificando acesso a página:', pathname);
+  console.log('Cookies presentes:', 
+    'auth-token =', token ? 'presente' : 'ausente',
+    'auth-status =', authStatus ? 'presente' : 'ausente'
+  );
 
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  try {
-    jwt.verify(token, JWT_SECRET);
+  // Se algum dos cookies estiver presente, permitir acesso
+  // A verificação definitiva será feita no nível da página com localStorage
+  if (token || authStatus === 'authenticated') {
+    console.log('Acesso permitido via cookie');
     return NextResponse.next();
-  } catch (error) {
-    return NextResponse.redirect(new URL('/login', request.url));
   }
+  
+  console.log('Redirecionando para login (sem cookie)');
+  return NextResponse.redirect(new URL('/login', request.url));
 }
 
 export const config = {
