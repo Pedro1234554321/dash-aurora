@@ -41,11 +41,16 @@ export default function CategoryChart() {
         <Legend 
           verticalAlign="bottom" 
           height={36}
-          formatter={(value, entry) => (
-            <span style={{ color: entry.color, fontWeight: 500 }}>
-              {value} ({entry.payload?.percentage}%)
-            </span>
-          )}
+          formatter={(value, entry) => {
+            // Usar interface personalizada para corrigir o erro de tipagem
+            type CustomPayload = { percentage?: number; name: string; value: number; };
+            const payload = entry.payload as CustomPayload;
+            return (
+              <span style={{ color: entry.color, fontWeight: 500 }}>
+                {value} ({payload?.percentage ?? 0}%)
+              </span>
+            );
+          }}
         />
       </PieChart>
     </ResponsiveContainer>
