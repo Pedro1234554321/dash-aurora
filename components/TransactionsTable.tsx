@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, MoreHorizontal, ArrowUpDown, Search, Calendar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown, ChevronUp, MoreHorizontal, ArrowUpDown, Search, Calendar, X, Trash2, Save } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 import { DashboardDataType } from '../app/dashboard/types';
 
@@ -37,11 +54,16 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
   const [isLoading, setIsLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [paginationData, setPaginationData] = useState({
     totalRecords: 0,
     totalPages: 0,
-    limit: 20
+    limit: 10
   });
+  
+  // Estado para controlar o modal de ações
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [actionType, setActionType] = useState<'view' | 'edit' | 'delete' | null>(null);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -123,6 +145,11 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
         url += `&date=${encodeURIComponent(dateFilter)}`;
       }
       
+      // Adicionar ordenação
+      if (sortField) {
+        url += `&sortField=${sortField}&sortDirection=${sortDirection}`;
+      }
+      
       console.log('Buscando transações com URL:', url);
       const response = await fetch(url);
       
@@ -132,6 +159,11 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
       
       const data = await response.json();
       
+      // Atualizar estado local com as transações carregadas
+      if (data.data && Array.isArray(data.data)) {
+        setTransactions(data.data);
+      }
+      
       if (data.pagination) {
         setPaginationData({
           totalRecords: data.pagination.totalRecords,
@@ -140,8 +172,6 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
         });
       }
       
-      // Atualizar o estado do dashboard com as novas transações
-      dashboardData.transactions = data.data;
       setCurrentPage(page);
     } catch (error) {
       console.error('Erro ao carregar transações:', error);
@@ -183,6 +213,28 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
     setSearchText('');
     setDateFilter('');
     loadTransactions(1);
+  };
+  
+  // Carregar transações quando o componente montar
+  useEffect(() => {
+    // Inicializar com as transações do dashboard quando disponíveis
+    if (dashboardData?.transactions?.length) {
+      setTransactions(dashboardData.transactions);
+      setPaginationData(prev => ({
+        ...prev,
+        totalRecords: dashboardData.transactions.length,
+        totalPages: Math.ceil(dashboardData.transactions.length / prev.limit)
+      }));
+    } else {
+      // Carregar transações da API
+      loadTransactions(1);
+    }
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Funções para lidar com as ações
+  const handleAction = (transaction: Transaction, action: 'view' | 'edit' | 'delete') => {
+    setSelectedTransaction(transaction);
+    setActionType(action);
   };
 
   // Inicializar paginação quando os dados do dashboard forem carregados
@@ -293,9 +345,9 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
               </tr>
             </thead>
             <tbody>
-              {dashboardData.transactions && dashboardData.transactions.length > 0 ? (
-                // Limita para exibir apenas as 5 transações mais recentes
-                dashboardData.transactions.slice(0, 5).map((transaction: Transaction, index: number) => (
+              {transactions && transactions.length > 0 ? (
+                // Exibindo as transações da página atual
+                transactions.map((transaction: Transaction, index: number) => (
                 <tr key={transaction.id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="p-2 sm:p-4 text-xs sm:text-sm text-gray-900">
                     {new Date(transaction.date).toLocaleDateString('pt-BR')}
@@ -331,10 +383,17 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="text-xs sm:text-sm">
-                        <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem>Duplicar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Excluir</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction(transaction, 'view')}>Ver detalhes</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction(transaction, 'edit')}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          // Duplicar a transação mantendo os mesmos dados
+                          const duplicate = {...transaction, id: `${transaction.id}-copy`};
+                          setTransactions(prev => [...prev, duplicate]);
+                        }}>Duplicar</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-red-600" 
+                          onClick={() => handleAction(transaction, 'delete')}
+                        >Excluir</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -351,30 +410,32 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
         </div>
         
         {/* Controles de paginação */}
-        {dashboardData.transactions && dashboardData.transactions.length > 0 && (
-          <div className="flex justify-between items-center mt-4 px-4 pb-2">
-            <div className="text-sm text-gray-500">
+        {transactions && transactions.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 mt-2 sm:mt-4 px-2 sm:px-4 pb-2">
+            <div className="text-xs sm:text-sm text-gray-500 w-full sm:w-auto text-center sm:text-left">
               {isLoading ? (
                 "Carregando..."
               ) : (
-                `Mostrando ${Math.min(paginationData.limit, dashboardData.transactions.length)} de ${paginationData.totalRecords} transações`
+                `Mostrando ${Math.min(paginationData.limit, transactions.length)} de ${paginationData.totalRecords} transações`
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-2">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-7 sm:h-8 px-2 sm:px-3 text-xs"
                 onClick={goToPreviousPage}
                 disabled={currentPage <= 1 || isLoading}
               >
                 Anterior
               </Button>
-              <span className="flex items-center justify-center px-3 py-1 text-sm bg-gray-100 rounded">
+              <span className="flex items-center justify-center px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm bg-gray-100 rounded">
                 {currentPage} / {Math.max(1, paginationData.totalPages)}
               </span>
               <Button
                 variant="outline"
                 size="sm"
+                className="h-7 sm:h-8 px-2 sm:px-3 text-xs"
                 onClick={goToNextPage}
                 disabled={currentPage >= paginationData.totalPages || isLoading}
               >
@@ -384,6 +445,232 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
           </div>
         )}
       </CardContent>
+      
+      {/* Diálogos para Ações */}
+      {/* 1. Diálogo para visualização de detalhes da transação */}
+      <Dialog open={actionType === 'view' && selectedTransaction !== null} onOpenChange={() => setActionType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Detalhes da Transação</DialogTitle>
+          </DialogHeader>
+          
+          {selectedTransaction && (
+            <div className="grid gap-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>ID</Label>
+                  <div className="text-sm text-gray-700 mt-1 bg-gray-50 p-2 rounded">{selectedTransaction.id}</div>
+                </div>
+                <div>
+                  <Label>Data</Label>
+                  <div className="text-sm text-gray-700 mt-1 bg-gray-50 p-2 rounded">
+                    {new Date(selectedTransaction.date).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <Label>Descrição</Label>
+                <div className="text-sm text-gray-700 mt-1 bg-gray-50 p-2 rounded">{selectedTransaction.description}</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label>Categoria</Label>
+                  <div className="text-sm text-gray-700 mt-1 bg-gray-50 p-2 rounded">{selectedTransaction.category}</div>
+                </div>
+                <div>
+                  <Label>Tipo</Label>
+                  <div className="mt-1">
+                    <Badge 
+                      variant="secondary" 
+                      className={`px-2 py-1 ${selectedTransaction.type.toLowerCase() === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                    >
+                      {translateType(selectedTransaction.type)}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <div className="mt-1">
+                    <Badge className={getStatusColor(selectedTransaction.status)}>
+                      {translateStatus(selectedTransaction.status)}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <Label>Valor</Label>
+                <div className="text-xl font-semibold mt-1 p-2 rounded text-center bg-gray-50">
+                  <span className={`${selectedTransaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedTransaction.amount > 0 ? '+' : ''}{formatCurrency(selectedTransaction.amount)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-center">
+            <Button type="button" variant="outline" onClick={() => setActionType(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* 2. Diálogo para edição de transação */}
+      <Dialog open={actionType === 'edit' && selectedTransaction !== null} onOpenChange={() => setActionType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Editar Transação</DialogTitle>
+          </DialogHeader>
+          
+          {selectedTransaction && (
+            <div className="grid gap-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="date">Data</Label>
+                  <Input 
+                    id="date" 
+                    type="date" 
+                    defaultValue={selectedTransaction.date.substring(0, 10)}
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="amount">Valor</Label>
+                  <Input 
+                    id="amount" 
+                    type="number" 
+                    step="0.01"
+                    defaultValue={Math.abs(selectedTransaction.amount)} 
+                    className="mt-1" 
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="description">Descrição</Label>
+                <Input 
+                  id="description" 
+                  defaultValue={selectedTransaction.description} 
+                  className="mt-1" 
+                />
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label htmlFor="category">Categoria</Label>
+                  <Input 
+                    id="category" 
+                    defaultValue={selectedTransaction.category} 
+                    className="mt-1" 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">Tipo</Label>
+                  <Select defaultValue={selectedTransaction.type.toLowerCase()}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="income">Entrada</SelectItem>
+                      <SelectItem value="expense">Saída</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select defaultValue={selectedTransaction.status?.toLowerCase() || 'pending'}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="completed">Confirmado</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="processed">Processado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="flex justify-between mt-4">
+            <Button type="button" variant="outline" onClick={() => setActionType(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              onClick={() => {
+                // Aqui implementaríamos a lógica para salvar as alterações
+                // Por enquanto, apenas fechamos o diálogo
+                alert('Funcionalidade ainda não implementada.');
+                setActionType(null);
+              }}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* 3. Diálogo para confirmar exclusão */}
+      <Dialog open={actionType === 'delete' && selectedTransaction !== null} onOpenChange={() => setActionType(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-red-600">Excluir Transação</DialogTitle>
+            <DialogDescription className="text-center pt-2">
+              Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTransaction && (
+            <div className="border border-red-200 rounded-lg p-3 bg-red-50 my-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-xs text-gray-500">Data:</span>
+                  <div className="text-sm font-medium">
+                    {new Date(selectedTransaction.date).toLocaleDateString('pt-BR')}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Valor:</span>
+                  <div className="text-sm font-medium">
+                    {formatCurrency(selectedTransaction.amount)}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2">
+                <span className="text-xs text-gray-500">Descrição:</span>
+                <div className="text-sm font-medium">{selectedTransaction.description}</div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="flex justify-between mt-2">
+            <Button type="button" variant="outline" onClick={() => setActionType(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                // Aqui implementaríamos a lógica de exclusão
+                // Por enquanto, removemos do estado local apenas para demonstração
+                if (selectedTransaction) {
+                  setTransactions(transactions.filter(t => t.id !== selectedTransaction.id));
+                }
+                setActionType(null);
+              }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
