@@ -43,7 +43,7 @@ export default function DashboardCards({ dashboardData }: DashboardCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-5">
       {cards.map((card, index) => {
         const Icon = card.icon;
         const isPositive = card.trend === 'up';
@@ -52,28 +52,28 @@ export default function DashboardCards({ dashboardData }: DashboardCardsProps) {
           <Card key={index} className="relative overflow-hidden shadow-sm border-none hover:shadow-md transition-all duration-300">
             <div className={`absolute inset-0 bg-gradient-to-br ${card.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
             
-            <CardHeader className="pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-gray-500 flex items-center justify-between">
-                {card.title}
-                <div className={`p-1.5 rounded-md bg-gradient-to-br ${card.color}`}>
-                  <Icon className="w-3.5 h-3.5 text-white" />
+            <CardHeader className="pb-1 sm:pb-2 space-y-0 px-3 py-2 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-500 flex items-center justify-between">
+                <span className="truncate mr-1">{card.title}</span>
+                <div className={`p-1 sm:p-1.5 rounded-md bg-gradient-to-br ${card.color} shrink-0`}>
+                  <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
                 </div>
               </CardTitle>
             </CardHeader>
             
-            <CardContent className="pt-1">
-              <div className="space-y-1">
-                <p className="text-2xl font-bold">{card.value}</p>
-                <div className="flex items-center space-x-1">
+            <CardContent className="pt-0 sm:pt-1 px-3 pb-3 sm:px-6 sm:pb-6">
+              <div className="space-y-0.5 sm:space-y-1">
+                <p className="text-base sm:text-2xl font-bold truncate">{card.value}</p>
+                <div className="flex flex-wrap items-center gap-x-1">
                   {isPositive ? (
-                    <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />
+                    <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500 shrink-0" />
                   ) : (
-                    <ArrowDownRight className="w-3.5 h-3.5 text-rose-500" />
+                    <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-500 shrink-0" />
                   )}
-                  <span className={`text-xs font-medium ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  <span className={`text-[10px] sm:text-xs font-medium ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                     {isPositive ? '+' : ''}{Math.abs(card.change).toFixed(1)}%
                   </span>
-                  <span className="text-xs text-gray-400 ml-1">vs mês anterior</span>
+                  <span className="text-[10px] sm:text-xs text-gray-400">vs mês anterior</span>
                 </div>
               </div>
             </CardContent>

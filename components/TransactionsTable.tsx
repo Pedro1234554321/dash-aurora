@@ -201,14 +201,15 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
 
   return (
     <Card className="border-0 shadow-lg">
-      <CardHeader>
+      <CardHeader className="p-3 sm:p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-900">Transações Recentes</CardTitle>
+          <CardTitle className="text-sm sm:text-lg font-semibold text-gray-900">Transações Recentes</CardTitle>
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => loadTransactions(1)}
             disabled={isLoading}
+            className="h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
           >
             {isLoading ? "Carregando..." : "Recarregar"}
           </Button>
@@ -216,31 +217,41 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
       </CardHeader>
       
       {/* Filtros de pesquisa e data */}
-      <div className="px-5 pb-2 pt-0">
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="px-3 sm:px-5 pb-2 pt-0">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4">
           <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
             <Input
-              placeholder="Buscar por descrição..."
-              className="pl-10"
+              placeholder="Buscar..."
+              className="pl-7 sm:pl-10 py-1 sm:py-2 text-xs sm:text-sm h-8 sm:h-10"
               value={searchText}
               onChange={handleSearchChange}
             />
           </div>
           <div className="relative sm:w-48">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Calendar className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
             <Input
               type="date"
-              className="pl-10"
+              className="pl-7 sm:pl-10 py-1 sm:py-2 text-xs sm:text-sm h-8 sm:h-10"
               value={dateFilter}
               onChange={handleDateChange}
             />
           </div>
           <div className="flex gap-2">
-            <Button variant="default" size="sm" onClick={applyFilters}>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={applyFilters}
+              className="h-8 sm:h-10 text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2"
+            >
               Filtrar
             </Button>
-            <Button variant="outline" size="sm" onClick={clearFilters}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearFilters}
+              className="h-8 sm:h-10 text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2"
+            >
               Limpar
             </Button>
           </div>
@@ -252,33 +263,33 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left p-4 font-medium text-gray-700">
+                <th className="text-left p-2 sm:p-4 font-medium text-gray-700">
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-auto p-0 font-medium"
+                    className="h-auto p-0 font-medium text-xs sm:text-sm"
                     onClick={() => handleSort('date')}
                   >
                     Data
-                    <ArrowUpDown className="ml-2 w-3 h-3" />
+                    <ArrowUpDown className="ml-1 sm:ml-2 w-3 h-3" />
                   </Button>
                 </th>
-                <th className="text-left p-4 font-medium text-gray-700">Descrição</th>
-                <th className="text-left p-4 font-medium text-gray-700">Categoria</th>
-                <th className="text-left p-4 font-medium text-gray-700">Tipo</th>
-                <th className="text-left p-4 font-medium text-gray-700">
+                <th className="text-left p-2 sm:p-4 font-medium text-gray-700 hidden sm:table-cell">Descrição</th>
+                <th className="text-left p-2 sm:p-4 font-medium text-gray-700 hidden md:table-cell">Categoria</th>
+                <th className="text-left p-2 sm:p-4 font-medium text-gray-700">Tipo</th>
+                <th className="text-left p-2 sm:p-4 font-medium text-gray-700">
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-auto p-0 font-medium"
+                    className="h-auto p-0 font-medium text-xs sm:text-sm"
                     onClick={() => handleSort('amount')}
                   >
                     Valor
-                    <ArrowUpDown className="ml-2 w-3 h-3" />
+                    <ArrowUpDown className="ml-1 sm:ml-2 w-3 h-3" />
                   </Button>
                 </th>
-                <th className="text-left p-4 font-medium text-gray-700">Status</th>
-                <th className="text-center p-4 font-medium text-gray-700">Ações</th>
+                <th className="text-left p-2 sm:p-4 font-medium text-gray-700 hidden sm:table-cell">Status</th>
+                <th className="text-center p-2 sm:p-4 font-medium text-gray-700">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -286,40 +297,40 @@ export default function TransactionsTable({ dashboardData }: TransactionsTablePr
                 // Limita para exibir apenas as 5 transações mais recentes
                 dashboardData.transactions.slice(0, 5).map((transaction: Transaction, index: number) => (
                 <tr key={transaction.id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 text-sm text-gray-900">
+                  <td className="p-2 sm:p-4 text-xs sm:text-sm text-gray-900">
                     {new Date(transaction.date).toLocaleDateString('pt-BR')}
                   </td>
-                  <td className="p-4">
-                    <div className="text-sm font-medium text-gray-900">{transaction.description}</div>
-                    <div className="text-xs text-gray-500">ID: {transaction.id}</div>
+                  <td className="p-2 sm:p-4 hidden sm:table-cell">
+                    <div className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-1">{transaction.description}</div>
+                    <div className="text-[10px] sm:text-xs text-gray-500">ID: {transaction.id.substring(0, 8)}</div>
                   </td>
-                  <td className="p-4 text-sm text-gray-700">{transaction.category}</td>
-                  <td className="p-4">
+                  <td className="p-2 sm:p-4 text-xs sm:text-sm text-gray-700 hidden md:table-cell">{transaction.category}</td>
+                  <td className="p-2 sm:p-4">
                     <Badge 
                       variant="secondary" 
-                      className={transaction.type.toLowerCase() === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                      className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 ${transaction.type.toLowerCase() === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
                     >
                       {translateType(transaction.type)}
                     </Badge>
                   </td>
-                  <td className="p-4">
-                    <span className={`text-sm font-medium ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <td className="p-2 sm:p-4">
+                    <span className={`text-xs sm:text-sm font-medium ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <Badge className={getStatusColor(transaction.status)}>
+                  <td className="p-2 sm:p-4 hidden sm:table-cell">
+                    <Badge className={`text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 ${getStatusColor(transaction.status)}`}>
                       {translateStatus(transaction.status)}
                     </Badge>
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-2 sm:p-4 text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
+                        <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                          <MoreHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="text-xs sm:text-sm">
                         <DropdownMenuItem>Ver detalhes</DropdownMenuItem>
                         <DropdownMenuItem>Editar</DropdownMenuItem>
                         <DropdownMenuItem>Duplicar</DropdownMenuItem>

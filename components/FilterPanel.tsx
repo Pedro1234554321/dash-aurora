@@ -28,11 +28,11 @@ export default function FilterPanel({ filters, onFiltersChange }: FilterPanelPro
 
   return (
     <Card className="border-0 shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filtros:</span>
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <Filter className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Filtros:</span>
           </div>
 
           <Select value={filters.period} onValueChange={(value) => updateFilter('period', value)}>

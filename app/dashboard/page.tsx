@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import DashboardCards from '@/components/DashboardCards';
 import ChartsSection from '@/components/ChartsSection';
 import TransactionsTable from '@/components/TransactionsTable';
@@ -397,29 +398,31 @@ export default function Dashboard() {
   // Se autenticado, exibir o dashboard
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="px-3 sm:px-6 py-4 sm:py-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-green-400 flex items-center justify-center text-white font-bold text-xl mr-3">
-              <img 
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-400 flex items-center justify-center text-white font-bold text-xl mr-2 sm:mr-3">
+              <Image 
                 src="https://public-images-b573dd662d7c89a635d85c00405f50b1.s3.us-east-1.amazonaws.com/logos/IMG_6066.PNG"
                 alt="Aurora Logo"
-                className=""
+                width={40}
+                height={40}
+                className="w-full h-full object-cover rounded-full"
               />
             </div>
             <div>
-              <div className="font-bold text-teal-800 text-lg">AURORA</div>
-              <div className="text-xs text-gray-500">INTELIGÊNCIA FINANCEIRA</div>
+              <div className="font-bold text-teal-800 text-sm sm:text-lg">AURORA</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">INTELIGÊNCIA FINANCEIRA</div>
             </div>
           </div>
           
           {/* Botão de sair */}
           <button 
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            className="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
           >
-            <LogOut className="w-4 h-4" />
-            Sair
+            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Sair</span>
           </button>
         </div>
         
