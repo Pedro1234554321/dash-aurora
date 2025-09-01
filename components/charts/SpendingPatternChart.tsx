@@ -39,19 +39,26 @@ export default function SpendingPatternChart({ selectedMonth, data = [] }: Spend
   };
   
   const chartData = adaptData();
+  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const displayMonth = selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : currentMonth;
 
   // Verificar se temos dados para exibir
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-full w-full text-sm text-gray-500">
-        Sem dados de padrões de gastos disponíveis.
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">Padrão de Gastos por Período - {displayMonth}</h3>
+        <div className="flex justify-center items-center h-64 w-full">
+          <div className="text-center">
+            <p className="text-xl font-semibold text-gray-500">Sem dados para o período selecionado</p>
+          </div>
+        </div>
       </div>
     );
   }
   
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Padrão de Gastos por Período do Mês</h3>
+      <h3 className="text-lg font-semibold mb-4">Padrão de Gastos por Período - {displayMonth}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartData.map((item: SpendingPatternData) => ({
@@ -67,7 +74,9 @@ export default function SpendingPatternChart({ selectedMonth, data = [] }: Spend
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="periodo_label" />
-          <YAxis />
+          <YAxis 
+            tickFormatter={(value) => `R$ ${value}`}
+          />
           <Tooltip
             formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Valor']}
             labelFormatter={(label) => `Período: ${label}`}

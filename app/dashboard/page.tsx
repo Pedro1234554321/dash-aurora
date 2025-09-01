@@ -397,35 +397,39 @@ export default function Dashboard() {
   
   // Se autenticado, exibir o dashboard
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="px-3 sm:px-6 py-4 sm:py-8">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-slate-100">
+      {/* Header com barra superior fixa */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
-            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-400 flex items-center justify-center text-white font-bold text-xl mr-2 sm:mr-3">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-teal-500 to-emerald-400 flex items-center justify-center text-white shadow-md mr-3">
               <Image 
                 src="https://public-images-b573dd662d7c89a635d85c00405f50b1.s3.us-east-1.amazonaws.com/logos/IMG_6066.PNG"
                 alt="Aurora Logo"
-                width={40}
-                height={40}
-                className="w-full h-full object-cover rounded-full"
+                width={48}
+                height={48}
+                className="w-full h-full object-cover rounded-full p-0.5"
               />
             </div>
             <div>
-              <div className="font-bold text-teal-800 text-sm sm:text-lg">AURORA</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">INTELIGÊNCIA FINANCEIRA</div>
+              <div className="font-bold text-teal-800 text-lg sm:text-xl tracking-wide">AURORA</div>
+              <div className="text-xs sm:text-sm text-teal-600 tracking-tight">INTELIGÊNCIA FINANCEIRA</div>
             </div>
           </div>
           
           {/* Botão de sair */}
           <button 
             onClick={handleLogout}
-            className="px-2 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1 sm:gap-2 text-xs sm:text-base"
+            className="px-3 sm:px-4 py-2 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-colors flex items-center gap-2 text-sm font-medium shadow-sm"
           >
-            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <LogOut className="w-4 h-4" />
             <span>Sair</span>
           </button>
         </div>
-        
+      </header>
+      
+      {/* Conteúdo principal */}
+      <div className="container mx-auto px-4 sm:px-6 py-6">
         {/* Card com informações do usuário e resumo financeiro */}
         {userData && (
           <UserInfoCard 
@@ -439,18 +443,22 @@ export default function Dashboard() {
           />
         )}
         
-        <main>
-          <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <main className="mt-8">
+          {/* Cabeçalho do Dashboard */}
+          <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-md border border-gray-50">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard Financeiro</h1>
-              <p className="text-gray-600 mt-1">Visão geral da sua inteligência financeira</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                Dashboard Financeiro
+                <span className="ml-2 inline-block px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-md">PRO</span>
+              </h1>
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">Visão geral da sua inteligência financeira</p>
             </div>
             
             <div className="flex flex-wrap gap-3">
               <select 
                 value={filters.period} 
                 onChange={(e) => setFilters({...filters, period: e.target.value})}
-                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm"
               >
                 <option value="30d">30 dias</option>
                 <option value="90d">90 dias</option>
@@ -460,24 +468,31 @@ export default function Dashboard() {
               
               <button 
                 onClick={loadDashboardData}
-                className="px-4 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition-colors text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-400 text-white rounded-lg hover:from-teal-600 hover:to-emerald-500 transition-colors text-sm flex items-center gap-2 font-medium shadow-sm"
               >
-                <Loader2 className="h-4 w-4" /> Atualizar dados
+                <Loader2 className="h-4 w-4 animate-spin" /> Atualizar dados
               </button>
-              
-              {/* Botão de visão geral de usuários removido */}
             </div>
           </div>
           
+          {/* Cards com estatísticas */}
           <DashboardCards dashboardData={dashboardData} />
           
+          {/* Seção de gráficos */}
           <div className="mt-8">
             <ChartsSection filters={filters} dashboardData={dashboardData} />
           </div>
           
+          {/* Seção da tabela de transações */}
           <div className="mt-8">
             <TransactionsTable dashboardData={dashboardData} />
           </div>
+          
+          {/* Footer */}
+          <footer className="mt-12 border-t border-gray-200 pt-6 pb-10 text-center text-sm text-gray-500">
+            <p>&copy; {new Date().getFullYear()} Aurora Inteligência Financeira. Todos os direitos reservados.</p>
+            <p className="mt-2">Versão 2.1.0</p>
+          </footer>
         </main>
       </div>
     </div>

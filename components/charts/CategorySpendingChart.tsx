@@ -43,11 +43,18 @@ export default function CategorySpendingChart({ selectedMonth, data = [] }: Cate
   };
   
   const chartData = adaptData();
+  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const displayMonth = selectedMonth ? new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : currentMonth;
 
   if (chartData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-full w-full text-sm text-gray-500">
-        Sem dados disponíveis para o período selecionado.
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">Gastos por Categoria - {displayMonth}</h3>
+        <div className="flex justify-center items-center h-64 w-full">
+          <div className="text-center">
+            <p className="text-xl font-semibold text-gray-500">Sem dados para o período selecionado</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -56,12 +63,13 @@ export default function CategorySpendingChart({ selectedMonth, data = [] }: Cate
   const formattedData = chartData.map((item: CategoryData, index: number) => ({
     name: item.categoria || item.category || `Categoria ${index + 1}`,
     value: Math.abs(Number(item.total_gasto || item.totalSpent || 0)),
+    percentual: item.percentual || item.percentage || 0,
     color: COLORS[index % COLORS.length]
   }));
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Gastos por Categoria</h3>
+      <h3 className="text-lg font-semibold mb-4">Gastos por Categoria - {displayMonth}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
@@ -90,11 +98,15 @@ export default function CategorySpendingChart({ selectedMonth, data = [] }: Cate
           <Legend 
             verticalAlign="bottom" 
             height={36}
-            formatter={(value, entry: any) => (
-              <span style={{ color: entry.color, fontWeight: 500 }}>
-                {value} ({entry.payload?.percentual}%)
-              </span>
-            )}
+            formatter={(value, entry: any) => {
+              // Extraindo o percentual correto do payload
+              const percentual = entry.payload?.percentual || 0;
+              return (
+                <span style={{ color: entry.color, fontWeight: 500 }}>
+                  {value} ({percentual.toFixed(1)}%)
+                </span>
+              );
+            }}
           />
         </PieChart>
       </ResponsiveContainer>

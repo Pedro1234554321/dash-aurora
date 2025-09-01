@@ -45,33 +45,22 @@ export default function ChartsSection({ dashboardData, filters }: ChartsSectionP
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800">Análise Financeira</h2>
-        
-        <div className="flex gap-3 mt-3 md:mt-0">
-          <div>
+        <div className="flex items-center space-x-4 mt-2 md:mt-0">
+          <div className="flex items-center">
+            <label htmlFor="month-select" className="mr-2 text-sm font-medium text-gray-700">
+              Mês:
+            </label>
             <select
-              id="monthSelect"
+              id="month-select"
+              className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm"
               value={selectedMonth}
               onChange={handleMonthChange}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              {monthOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {monthOptions.map(month => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
                 </option>
               ))}
-            </select>
-          </div>
-
-          <div>
-            <select
-              id="monthsSelect"
-              value={selectedMonths}
-              onChange={handleMonthsChange}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value={3}>Últimos 3 meses</option>
-              <option value={6}>Últimos 6 meses</option>
-              <option value={12}>Últimos 12 meses</option>
             </select>
           </div>
         </div>

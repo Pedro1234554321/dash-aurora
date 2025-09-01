@@ -22,12 +22,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const month = searchParams.get('month') || new Date().toISOString().slice(0, 7);
     const searchText = searchParams.get('search');
-    const dateFilter = searchParams.get('date');
+    const dateStart = searchParams.get('dateStart');
+    const dateEnd = searchParams.get('dateEnd');
     
     console.log('Filtros solicitados:', {
       month,
       searchText: searchText || 'nenhum',
-      date: dateFilter || 'nenhuma'
+      dateStart: dateStart || 'nenhuma',
+      dateEnd: dateEnd || 'nenhuma'
     });
     
     // Parâmetros de paginação
@@ -51,8 +53,8 @@ export async function GET(request: NextRequest) {
       let queryParams = [userId];
       let paramIndex = 2; // Começando do $2 pois $1 é o userId
       
-      // Filtro de mês (YYYY-MM)
-      if (month) {
+      // Filtro de mês (YYYY-MM) - apenas se não houver filtro de data específica
+      if (month && !dateStart && !dateEnd) {
         filterClauses.push(`TO_CHAR(data, 'YYYY-MM') = $${paramIndex}`);
         queryParams.push(month);
         paramIndex++;
@@ -67,12 +69,22 @@ export async function GET(request: NextRequest) {
         console.log('Aplicando filtro de busca:', searchText);
       }
       
-      // Filtro de data específica
-      if (dateFilter) {
-        filterClauses.push(`TO_CHAR(data, 'YYYY-MM-DD') = $${paramIndex}`);
-        queryParams.push(dateFilter);
+      // Filtro de data inicial (data de pagamento)
+      if (dateStart) {
+        // Usando DATE(data_pagamento) para ignorar o componente de hora
+        filterClauses.push(`DATE(data_pagamento) >= $${paramIndex}::date`);
+        queryParams.push(dateStart);
         paramIndex++;
-        console.log('Aplicando filtro de data:', dateFilter);
+        console.log('Aplicando filtro de data inicial em data_pagamento:', dateStart);
+      }
+      
+      // Filtro de data final (data de pagamento)
+      if (dateEnd) {
+        // Usando DATE(data_pagamento) para ignorar o componente de hora
+        filterClauses.push(`DATE(data_pagamento) <= $${paramIndex}::date`);
+        queryParams.push(dateEnd);
+        paramIndex++;
+        console.log('Aplicando filtro de data final em data_pagamento:', dateEnd);
       }
       
       // Construir a cláusula WHERE completa

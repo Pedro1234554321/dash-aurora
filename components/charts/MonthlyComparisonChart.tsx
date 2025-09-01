@@ -63,8 +63,20 @@ export default function MonthlyComparisonChart({ months = 6, data = [] }: Monthl
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Comparativo Mensal</h3>
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-50 overflow-hidden relative">
+      {/* Elemento decorativo */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-emerald-400"></div>
+      
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-xl font-bold text-gray-800">Comparativo Mensal</h3>
+          <p className="text-sm text-gray-500 mt-1">Análise de receitas e despesas</p>
+        </div>
+        <div className="bg-gray-50 rounded-lg px-3 py-1 text-sm text-gray-500 font-medium border border-gray-100">
+          {filteredData.length} {filteredData.length === 1 ? 'mês' : 'meses'}
+        </div>
+      </div>
+      
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
           data={filteredData.map((item: MonthlyData) => {
@@ -80,26 +92,62 @@ export default function MonthlyComparisonChart({ months = 6, data = [] }: Monthl
             top: 20,
             right: 30,
             left: 20,
-            bottom: 5,
+            bottom: 10,
           }}
+          barGap={8}
+          barCategoryGap={16}
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month_label" />
-          <YAxis />
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+          <XAxis 
+            dataKey="month_label" 
+            axisLine={{ stroke: '#e5e7eb' }} 
+            tickLine={false}
+            tick={{ fontSize: 12, fill: '#64748b' }}
+          />
+          <YAxis 
+            axisLine={false} 
+            tickLine={false}
+            tick={{ fontSize: 12, fill: '#64748b' }}
+            tickFormatter={(value) => `R$${value}`}
+          />
           <Tooltip 
+            cursor={{ fill: 'rgba(236, 253, 245, 0.4)' }}
             formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Valor']}
             labelFormatter={(label) => `Mês: ${label}`}
             contentStyle={{
               backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
+              border: 'none',
               borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+              padding: '12px'
             }}
           />
-          <Legend />
-          <Bar name="Entradas" dataKey="income" fill="#00E980" radius={[4, 4, 0, 0]} />
-          <Bar name="Saídas" dataKey="expenses" fill="#007A7F" radius={[4, 4, 0, 0]} />
-          <Bar name="Saldo" dataKey="balance" fill="#015061" radius={[4, 4, 0, 0]} />
+          <Legend 
+            iconType="circle"
+            iconSize={10}
+            wrapperStyle={{ paddingTop: 20 }}
+          />
+          <Bar 
+            name="Entradas" 
+            dataKey="income" 
+            fill="#10b981" 
+            radius={[6, 6, 0, 0]}
+            maxBarSize={50}
+          />
+          <Bar 
+            name="Saídas" 
+            dataKey="expenses" 
+            fill="#ef4444" 
+            radius={[6, 6, 0, 0]}
+            maxBarSize={50}
+          />
+          <Bar 
+            name="Saldo" 
+            dataKey="balance" 
+            fill="#3b82f6" 
+            radius={[6, 6, 0, 0]}
+            maxBarSize={50}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

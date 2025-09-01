@@ -15,11 +15,12 @@ export async function GET(request: NextRequest) {
       return sessionResult; // Return the error response
     }
     
-    // Now TypeScript knows sessionResult is UserSession
     const session: UserSession = sessionResult;
     const userId = session.userId;
     const searchParams = request.nextUrl.searchParams;
     const month = searchParams.get('month') || new Date().toISOString().slice(0, 7);
+    
+    console.log('Filtrando gastos por categoria para o mês:', month);
     
     // Verificando a estrutura da tabela primeiro
     console.log('Verificando estrutura da tabela gasto_por_categoria_mensal');
@@ -36,7 +37,6 @@ export async function GET(request: NextRequest) {
     let result;
     
     try {
-      // Tentativa com a tabela original
       result = await pool.query(`
         SELECT 
           categoria,
@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
             SUM(ABS(valor)) as total_gasto,
             round((SUM(ABS(valor)) * 100.0 / 
               CASE WHEN (SELECT SUM(ABS(valor)) FROM transacoes 
-                         WHERE usuario_id = $1 AND tipo = 'expense' 
+                         WHERE usuario_id = $1 AND tipo = 'expense'
                          AND to_char(data, 'YYYY-MM') = $2) > 0 
                    THEN (SELECT SUM(ABS(valor)) FROM transacoes 
-                         WHERE usuario_id = $1 AND tipo = 'expense' 
+                         WHERE usuario_id = $1 AND tipo = 'expense'
                          AND to_char(data, 'YYYY-MM') = $2)
                    ELSE 1 END
             ), 1) as percentual
