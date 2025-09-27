@@ -1,56 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { Pool } from 'pg';
+import pool from '@/lib/db';
 
 // Força o uso do runtime Node.js completo (não o Edge Runtime)
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Configuração da conexão com o banco de dados PostgreSQL
-let pool: Pool;
-try {
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
-} catch (error) {
-  console.error('Erro ao criar pool de conexão com o PostgreSQL:', error);
-}
-
-// Dados fixos para quando o banco de dados não está disponível (APENAS PARA DESENVOLVIMENTO)
-const getFixedUserData = () => {
-  return {
-    id: "7948b191-e568-4eb9-92a2-67bf5583d007",
-    nome: "Wesley Santos",
-    email: "telhado.folha@gmail.com",
-    totalEntradas: 4183.00,
-    totalDespesas: 5823.31,
-    saldo: -1640.31
-  };
-};
+// Usando a conexão com o banco de dados PostgreSQL do arquivo db.ts
 
 export async function GET(request: NextRequest) {
   try {
     const sessionResult = await requireAuth(request);
     
-    // Verificar se é uma resposta de erro (não é uma sessão de usuário)
     if ('status' in sessionResult) {
       return sessionResult; // Retorna a resposta de erro
     }
     
-    // Agora temos acesso à sessão do usuário
     const userId = sessionResult.userId;
     console.log('Buscando resumo financeiro do usuário:', userId);
-
-    // Verificar se o pool do banco de dados está disponível
-    if (!pool) {
-      console.warn('Banco de dados não disponível. Usando dados fixos do Wesley.');
-      const fixedData = getFixedUserData();
-      return NextResponse.json({
-        success: true,
-        data: fixedData,
-        isFixed: true
-      });
-    }
 
     try {
       console.log(`Buscando dados financeiros para o usuário ID: ${userId}`);
@@ -73,16 +40,9 @@ export async function GET(request: NextRequest) {
       if (result.rowCount === 0) {
         console.log('Nenhum dado encontrado para o usuário na view.');
         return NextResponse.json({
-          success: true,
-          data: {
-            id: userId,
-            nome: "Usuário",
-            email: "email@exemplo.com",
-            totalEntradas: 0,
-            totalDespesas: 0,
-            saldo: 0
-          }
-        });
+          success: false,
+          error: 'Nenhum dado encontrado para o usuário'
+        }, { status: 404 });
       }
       
       const userData = result.rows[0];
@@ -100,27 +60,18 @@ export async function GET(request: NextRequest) {
         }
       });
     } catch (dbError) {
-      console.warn('Erro ao consultar o banco de dados:', dbError);
-      console.log('Usando dados fixos do Wesley como fallback.');
-      const fixedData = getFixedUserData();
+      console.error('Erro ao buscar dados do usuário:', dbError);
       return NextResponse.json({
-        success: true,
-        data: fixedData,
-        isFixed: true
-      });
+        success: false,
+        error: 'Erro ao buscar dados do usuário'
+      }, { status: 500 });
     }
     
   } catch (error) {
     console.error('Erro ao buscar dados do usuário:', error);
-    
-    // Em caso de erro geral, usar dados fixos como fallback
-    console.warn('Erro geral ao processar requisição:', error);
-    console.log('Usando dados fixos do Wesley como último recurso.');
-    const fixedData = getFixedUserData();
     return NextResponse.json({
-      success: true,
-      data: fixedData,
-      isFixed: true
-    });
+      success: false,
+      error: 'Erro ao buscar dados do usuário'
+    }, { status: 500 });
   }
 }

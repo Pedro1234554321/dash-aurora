@@ -5,6 +5,8 @@ import { Mail, ArrowRight, Shield, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [step, setStep] = useState<'email' | 'code'>('email');
@@ -12,6 +14,7 @@ export default function LoginPage() {
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const { toast } = useToast();
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,11 +38,19 @@ export default function LoginPage() {
         setStep('code');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || 'Erro ao enviar código. Tente novamente.');
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: errorData.error || 'Erro ao enviar código. Tente novamente.'
+        });
       }
     } catch (error) {
       console.error('Erro na requisição:', error);
-      alert('Erro de conexão. Tente novamente.');
+      toast({
+        variant: "destructive",
+        title: "Erro de conexão",
+        description: 'Não foi possível conectar ao servidor. Tente novamente.'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +113,11 @@ export default function LoginPage() {
         localStorage.setItem('lastLogin', new Date().toISOString());
         
         // Show success message before redirecting
-        alert('Login realizado com sucesso! Redirecionando para o dashboard...');
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando para o dashboard...",
+          className: "bg-gradient-to-r from-[#00E980] to-[#00FFBB] text-white"
+        });
         
         // SOLUÇÃO EXTREMA: Sobrescrever a URL ao invés de redirecionar
         window.history.pushState({}, '', '/dashboard');
@@ -133,41 +148,62 @@ export default function LoginPage() {
           console.error('Erro ao analisar resposta de erro:', e);
         }
         
-        alert(errorMessage);
+        toast({
+          variant: "destructive",
+          title: "Erro de verificação",
+          description: errorMessage
+        });
       }
     } catch (error) {
       console.error('Erro na verificação:', error);
-      alert('Erro ao verificar código. Tente novamente.');
+      toast({
+        variant: "destructive",
+        title: "Erro de verificação",
+        description: 'Erro ao verificar código. Tente novamente.'
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     setIsLoading(true);
     
-    fetch('/api/auth/send-code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email
-      })
-    })
-    .then(response => {
+    try {
+      const response = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email
+        })
+      });
+
       if (response.ok) {
         setCodeSent(true);
+        toast({
+          title: "Código enviado!",
+          description: "Verifique seu email para o novo código."
+        });
       } else {
-        alert('Erro ao reenviar código. Tente novamente.');
+        const errorData = await response.json();
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: errorData.error || 'Erro ao reenviar código. Tente novamente.'
+        });
       }
-    })
-    .catch(error => {
-      console.error('Erro na requisição:', error);
-    })
-    .finally(() => {
+    } catch (error) {
+      console.error('Erro ao reenviar código:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro de conexão",
+        description: 'Não foi possível conectar ao servidor. Tente novamente.'
+      });
+    } finally {
       setIsLoading(false);
-    });
+    }
   };
 
   return (
@@ -184,10 +220,12 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <img 
+              <Image 
                 src="https://public-images-b573dd662d7c89a635d85c00405f50b1.s3.us-east-1.amazonaws.com/logos/IMG_6066.PNG"
                 alt="Aurora Logo"
                 className="w-16 h-16 object-contain shadow-lg rounded-2xl bg-white p-2"
+                width={64}
+                height={64}
               />
               <div className="absolute -inset-1 bg-gradient-to-br from-[#00E980] to-[#00FFBB] rounded-2xl blur opacity-25"></div>
             </div>

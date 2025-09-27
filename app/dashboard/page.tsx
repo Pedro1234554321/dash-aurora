@@ -8,6 +8,8 @@ import ChartsSection from '@/components/ChartsSection';
 import TransactionsTable from '@/components/TransactionsTable';
 import FilterPanel from '@/components/FilterPanel';
 import UserInfoCard from '@/components/UserInfoCard';
+import RemindersCard from '@/components/reminders/RemindersCard';
+import CategoriesCard from '@/components/categories/CategoriesCard';
 import { Loader2, AlertCircle, LogOut } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { DashboardDataType } from './types'; // Importando a interface atualizada
@@ -487,6 +489,12 @@ export default function Dashboard() {
           <div className="mt-8">
             <TransactionsTable dashboardData={dashboardData} />
           </div>
+
+          {/* Seção de lembretes */}
+          <RemindersCard />
+
+          {/* Seção de categorias */}
+          <CategoriesCard />
           
           {/* Footer */}
           <footer className="mt-12 border-t border-gray-200 pt-6 pb-10 text-center text-sm text-gray-500">
